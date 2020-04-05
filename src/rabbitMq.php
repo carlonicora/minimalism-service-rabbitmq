@@ -1,11 +1,11 @@
 <?php
-namespace phlow\library\services\rabbitMq;
+namespace carlonicora\minimalism\services\rabbitMq;
 
 use carlonicora\minimalism\core\services\abstracts\abstractService;
 use carlonicora\minimalism\core\services\factories\servicesFactory;
 use carlonicora\minimalism\core\services\interfaces\serviceConfigurationsInterface;
 use Exception;
-use phlow\library\services\rabbitMq\configurations\rabbitMqConfigurations;
+use carlonicora\minimalism\services\rabbitMq\configurations\rabbitMqConfigurations;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;

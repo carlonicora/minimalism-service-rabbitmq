@@ -1,5 +1,5 @@
 <?php
-namespace phlow\library\services\rabbitMq\configurations;
+namespace carlonicora\minimalism\services\rabbitMq\configurations;
 
 use carlonicora\minimalism\core\services\abstracts\abstractServiceConfigurations;
 use carlonicora\minimalism\core\services\exceptions\configurationException;

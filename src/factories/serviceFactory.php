@@ -1,11 +1,11 @@
 <?php
-namespace phlow\library\services\rabbitMq\factories;
+namespace carlonicora\minimalism\services\rabbitMq\factories;
 
 use carlonicora\minimalism\core\services\abstracts\abstractServiceFactory;
 use carlonicora\minimalism\core\services\exceptions\configurationException;
 use carlonicora\minimalism\core\services\factories\servicesFactory;
-use phlow\library\services\rabbitMq\configurations\rabbitMqConfigurations;
-use phlow\library\services\rabbitMq\rabbitMq;
+use carlonicora\minimalism\services\rabbitMq\configurations\rabbitMqConfigurations;
+use carlonicora\minimalism\services\rabbitMq\rabbitMq;
 
 class serviceFactory extends abstractServiceFactory {
     /**
