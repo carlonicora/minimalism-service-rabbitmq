@@ -16,15 +16,15 @@ class rabbitMqConfigurations extends abstractServiceConfigurations {
      * @throws configurationException
      */
     public function __construct() {
-        if (!getenv('PHLOW_QUEUE_NAME')) {
-            throw new configurationException('rabbitMq', 'PHLOW_QUEUE_NAME is a required configuration');
+        if (!getenv('RABBITMQ_QUEUE_NAME')) {
+            throw new configurationException('rabbitMq', 'RABBITMQ_QUEUE_NAME is a required configuration');
         }
 
-        if (!($rabbitMqConnection = getenv('PHLOW_RABBITMQ'))) {
-            throw new configurationException('rabbitMq', 'PHLOW_RABBITMQ is a required configuration');
+        if (!($rabbitMqConnection = getenv('RABBITMQ'))) {
+            throw new configurationException('rabbitMq', 'RABBITMQ is a required configuration');
         }
 
-        $this->queueName = getenv('PHLOW_QUEUE_NAME');
+        $this->queueName = getenv('RABBITMQ_QUEUE_NAME');
 
         $this->rabbitMqConnection = [];
         [
