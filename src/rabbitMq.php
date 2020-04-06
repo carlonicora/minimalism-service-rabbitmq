@@ -33,11 +33,13 @@ class rabbitMq extends abstractService {
      * @throws Exception
      */
     public function __destruct() {
-        $this->connection()->channel()->close();
-        try{
-            $this->connection()->close();
-        } catch (Exception $e){
+        if ($this->connection !== null) {
+            $this->connection->channel()->close();
+            try {
+                $this->connection->close();
+            } catch (Exception $e) {
 
+            }
         }
     }
 
@@ -107,5 +109,4 @@ class rabbitMq extends abstractService {
 
         return true;
     }
-
 }
