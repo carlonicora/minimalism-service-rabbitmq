@@ -14,7 +14,7 @@ class rabbitMq extends abstractService {
     /** @var rabbitMqConfigurations  */
     public rabbitMqConfigurations $configData;
 
-    /** @var AMQPStreamConnection|null */
+    /** @var AMQPStreamConnection*/
     private ?AMQPStreamConnection $connection=null;
 
     /**
@@ -33,34 +33,37 @@ class rabbitMq extends abstractService {
      * @throws Exception
      */
     public function __destruct() {
-        $this->connection->channel()->close();
+        $this->connection()->channel()->close();
         try{
-            $this->connection->close();
+            $this->connection()->close();
         } catch (Exception $e){
 
         }
     }
 
-    private function initialise() : void {
-        $this->connection = new AMQPStreamConnection(
-            $this->configData->rabbitMqConnection['host'],
-            $this->configData->rabbitMqConnection['port'],
-            $this->configData->rabbitMqConnection['user'],
-            $this->configData->rabbitMqConnection['password']);
+    /**
+     * @return AMQPStreamConnection
+     */
+    private function connection() : AMQPStreamConnection {
+        if ($this->connection === null) {
+            $this->connection = new AMQPStreamConnection(
+                $this->configData->rabbitMqConnection['host'],
+                $this->configData->rabbitMqConnection['port'],
+                $this->configData->rabbitMqConnection['user'],
+                $this->configData->rabbitMqConnection['password']);
+        }
+
+        return $this->connection;
     }
 
     /**
      * @param $callback
      */
     public function initialiseDispatcher(&$callback): void {
-        if ($this->connection === null){
-            $this->initialise();
-        }
+        $this->connection()->channel()->queue_declare($this->configData->queueName, false, true, false, false);
 
-        $this->connection->channel()->queue_declare($this->configData->queueName, false, true, false, false);
-
-        $this->connection->channel()->basic_qos(null, 1, null);
-        $this->connection->channel()->basic_consume($this->configData->queueName , '', false, false, false, false, $callback);
+        $this->connection()->channel()->basic_qos(null, 1, null);
+        $this->connection()->channel()->basic_consume($this->configData->queueName , '', false, false, false, false, $callback);
     }
 
     /**
@@ -68,11 +71,7 @@ class rabbitMq extends abstractService {
      * @return bool
      */
     public function dispatchMessage(array $message): bool {
-        if ($this->connection === null){
-            $this->initialise();
-        }
-
-        $this->connection->channel()->queue_declare($this->configData->queueName, false, true, false, false);
+        $this->connection()->channel()->queue_declare($this->configData->queueName, false, true, false, false);
 
         $jsonMessage = json_encode($message, JSON_THROW_ON_ERROR, 512);
         $msg = new AMQPMessage(
@@ -80,7 +79,7 @@ class rabbitMq extends abstractService {
             ['delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT]
         );
 
-        $this->connection->channel()->basic_publish($msg, '', $this->configData->queueName);
+        $this->connection()->channel()->basic_publish($msg, '', $this->configData->queueName);
 
         return true;
     }
@@ -91,11 +90,7 @@ class rabbitMq extends abstractService {
      * @return bool
      */
     public function dispatchDelayedMessage(array $message, int $delay): bool {
-        if ($this->connection === null){
-            $this->initialise();
-        }
-
-        $this->connection->channel()->queue_declare($this->configData->queueName, false, true, false, false);
+        $this->connection()->channel()->queue_declare($this->configData->queueName, false, true, false, false);
 
         $jsonMessage = json_encode($message, JSON_THROW_ON_ERROR, 512);
         $msg = new AMQPMessage(
@@ -108,7 +103,7 @@ class rabbitMq extends abstractService {
             ]
         );
 
-        $this->connection->channel()->basic_publish($msg, '', $this->configData->queueName);
+        $this->connection()->channel()->basic_publish($msg, '', $this->configData->queueName);
 
         return true;
     }
