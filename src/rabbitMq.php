@@ -14,8 +14,8 @@ class rabbitMq extends abstractService {
     /** @var rabbitMqConfigurations  */
     public rabbitMqConfigurations $configData;
 
-    /** @var AMQPStreamConnection*/
-    private AMQPStreamConnection $connection;
+    /** @var AMQPStreamConnection|null */
+    private ?AMQPStreamConnection $connection=null;
 
     /**
      * abstractApiCaller constructor.
