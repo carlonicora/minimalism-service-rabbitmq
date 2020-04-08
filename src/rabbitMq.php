@@ -6,6 +6,7 @@ use carlonicora\minimalism\core\services\factories\servicesFactory;
 use carlonicora\minimalism\core\services\interfaces\serviceConfigurationsInterface;
 use Exception;
 use carlonicora\minimalism\services\rabbitMq\configurations\rabbitMqConfigurations;
+use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
@@ -108,5 +109,19 @@ class rabbitMq extends abstractService {
         $this->connection()->channel()->basic_publish($msg, '', $this->configData->queueName);
 
         return true;
+    }
+
+    /**
+     * @return AMQPChannel
+     */
+    public function channel() : AMQPChannel {
+        return $this->connection()->channel();
+    }
+
+    /**
+     * @return int
+     */
+    public function currentQueueLength() : int {
+        return count($this->connection()->channel()->callbacks);
     }
 }
