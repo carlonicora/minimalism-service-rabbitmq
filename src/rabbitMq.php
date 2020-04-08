@@ -4,6 +4,7 @@ namespace carlonicora\minimalism\services\rabbitMq;
 use carlonicora\minimalism\core\services\abstracts\abstractService;
 use carlonicora\minimalism\core\services\factories\servicesFactory;
 use carlonicora\minimalism\core\services\interfaces\serviceConfigurationsInterface;
+use ErrorException;
 use Exception;
 use carlonicora\minimalism\services\rabbitMq\configurations\rabbitMqConfigurations;
 use PhpAmqpLib\Channel\AMQPChannel;
@@ -45,28 +46,36 @@ class rabbitMq extends abstractService {
     }
 
     /**
-     * @return AMQPStreamConnection
+     * @return AMQPChannel
      */
-    private function connection() : AMQPStreamConnection {
-        if ($this->connection === null) {
+    private function channel() : AMQPChannel {
+        if ($this->connection === null){
             $this->connection = new AMQPStreamConnection(
                 $this->configData->rabbitMqConnection['host'],
                 $this->configData->rabbitMqConnection['port'],
                 $this->configData->rabbitMqConnection['user'],
                 $this->configData->rabbitMqConnection['password']);
         }
-
-        return $this->connection;
+        return $this->connection->channel();
     }
 
-    /**
-     * @param $callback
-     */
-    public function initialiseDispatcher(&$callback): void {
-        $this->connection()->channel()->queue_declare($this->configData->queueName, false, true, false, false);
 
-        $this->connection()->channel()->basic_qos(null, 1, null);
-        $this->connection()->channel()->basic_consume($this->configData->queueName , '', false, false, false, false, $callback);
+    /**
+     * @param callable $callback
+     * @throws ErrorException
+     */
+    public function listen(&$callback): void {
+        $channel = $this->channel();
+        $channel->queue_declare($this->configData->queueName, false, true, false, false);
+
+        $channel->basic_qos(null, 1, null);
+        $channel->basic_consume($this->configData->queueName , '', false, false, false, false, $callback);
+
+        while(count($channel->callbacks)) {
+            $channel->wait();
+        }
+        $channel->close();
+        $this->connection->close();
     }
 
     /**
@@ -74,7 +83,8 @@ class rabbitMq extends abstractService {
      * @return bool
      */
     public function dispatchMessage(array $message): bool {
-        $this->connection()->channel()->queue_declare($this->configData->queueName, false, true, false, false);
+        $channel = $this->channel();
+        $channel->queue_declare($this->configData->queueName, false, true, false, false);
 
         $jsonMessage = json_encode($message, JSON_THROW_ON_ERROR, 512);
         $msg = new AMQPMessage(
@@ -82,7 +92,7 @@ class rabbitMq extends abstractService {
             ['delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT]
         );
 
-        $this->connection()->channel()->basic_publish($msg, '', $this->configData->queueName);
+        $channel->basic_publish($msg, '', $this->configData->queueName);
 
         return true;
     }
@@ -93,7 +103,8 @@ class rabbitMq extends abstractService {
      * @return bool
      */
     public function dispatchDelayedMessage(array $message, int $delay): bool {
-        $this->connection()->channel()->queue_declare($this->configData->queueName, false, true, false, false);
+        $channel = $this->channel();
+        $channel->queue_declare($this->configData->queueName, false, true, false, false);
 
         $jsonMessage = json_encode($message, JSON_THROW_ON_ERROR, 512);
         $msg = new AMQPMessage(
@@ -106,22 +117,8 @@ class rabbitMq extends abstractService {
             ]
         );
 
-        $this->connection()->channel()->basic_publish($msg, '', $this->configData->queueName);
+        $channel->basic_publish($msg, '', $this->configData->queueName);
 
         return true;
-    }
-
-    /**
-     * @return AMQPChannel
-     */
-    public function channel() : AMQPChannel {
-        return $this->connection()->channel();
-    }
-
-    /**
-     * @return int
-     */
-    public function currentQueueLength() : int {
-        return count($this->connection()->channel()->callbacks);
     }
 }
