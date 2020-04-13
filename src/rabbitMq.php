@@ -121,4 +121,11 @@ class rabbitMq extends abstractService {
 
         return true;
     }
+
+    /**
+     *
+     */
+    public function cleanNonPersistentVariables(): void {
+        $this->connection = null;
+    }
 }
