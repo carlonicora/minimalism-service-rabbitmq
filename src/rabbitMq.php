@@ -7,6 +7,7 @@ use carlonicora\minimalism\core\services\interfaces\serviceConfigurationsInterfa
 use ErrorException;
 use Exception;
 use carlonicora\minimalism\services\rabbitMq\configurations\rabbitMqConfigurations;
+use JsonException;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
@@ -79,8 +80,29 @@ class rabbitMq extends abstractService {
     }
 
     /**
+     * @return bool
+     */
+    public function isQueueEmpty(): bool {
+        $messageCount = 0;
+        $channel = $this->channel();
+        try {
+            /** @noinspection PhpUnusedLocalVariableInspection */
+            [$queue, $messageCount, $consumerCount] = $channel->queue_declare($this->configData->queueName, true);
+        } catch (Exception $e) {
+            /** @noinspection PhpPossiblePolymorphicInvocationInspection */
+            if ($e->amqp_reply_code === 404){
+                $messageCount = 0;
+            }
+        }
+
+        return $messageCount === 0;
+    }
+
+
+    /**
      * @param array $message
      * @return bool
+     * @throws JsonException
      */
     public function dispatchMessage(array $message): bool {
         $channel = $this->channel();
@@ -101,6 +123,7 @@ class rabbitMq extends abstractService {
      * @param int $delay delay in seconds
      * @param array $message
      * @return bool
+     * @throws JsonException
      */
     public function dispatchDelayedMessage(array $message, int $delay): bool {
         $channel = $this->channel();
