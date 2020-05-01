@@ -103,6 +103,7 @@ class rabbitMq extends abstractService {
      * @param array $message
      * @return bool
      * @throws JsonException
+     * @noinspection PhpDocRedundantThrowsInspection
      */
     public function dispatchMessage(array $message): bool {
         $channel = $this->channel();
@@ -124,6 +125,7 @@ class rabbitMq extends abstractService {
      * @param array $message
      * @return bool
      * @throws JsonException
+     * @noinspection PhpDocRedundantThrowsInspection
      */
     public function dispatchDelayedMessage(array $message, int $delay): bool {
         $channel = $this->channel();
