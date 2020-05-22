@@ -1,10 +1,10 @@
 <?php
-namespace carlonicora\minimalism\services\rabbitMq\CConfigurations;
+namespace CarloNicora\Minimalism\Services\RabbitMq\Configurations;
 
-use carlonicora\minimalism\core\services\abstracts\abstractServiceConfigurations;
-use carlonicora\minimalism\core\services\exceptions\configurationException;
+use CarloNicora\Minimalism\Core\Services\Abstracts\AbstractServiceConfigurations;
+use CarloNicora\Minimalism\Core\Services\Exceptions\ConfigurationException;
 
-class RRabbitMqConfigurations extends abstractServiceConfigurations {
+class RabbitMqConfigurations extends AbstractServiceConfigurations {
     /** @var string  */
     private string $queueName;
 
