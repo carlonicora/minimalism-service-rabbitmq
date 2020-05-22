@@ -6,16 +6,16 @@ use carlonicora\minimalism\core\services\factories\servicesFactory;
 use carlonicora\minimalism\core\services\interfaces\serviceConfigurationsInterface;
 use ErrorException;
 use Exception;
-use carlonicora\minimalism\services\rabbitMq\configurations\rabbitMqConfigurations;
+use carlonicora\minimalism\services\rabbitMq\CConfigurations\RRabbitMqConfigurations;
 use JsonException;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
 
-class rabbitMq extends abstractService {
-    /** @var rabbitMqConfigurations  */
-    public rabbitMqConfigurations $configData;
+class RRabbitMq extends abstractService {
+    /** @var RRabbitMqConfigurations  */
+    public RRabbitMqConfigurations $configData;
 
     /** @var AMQPStreamConnection*/
     private ?AMQPStreamConnection $connection=null;
