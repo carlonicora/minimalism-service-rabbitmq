@@ -1,8 +1,9 @@
 <?php
 namespace CarloNicora\Minimalism\Services\RabbitMq\Configurations;
 
+use CarloNicora\Minimalism\Core\Events\MinimalismErrorEvents;
 use CarloNicora\Minimalism\Core\Services\Abstracts\AbstractServiceConfigurations;
-use CarloNicora\Minimalism\Core\Services\Exceptions\ConfigurationException;
+use Exception;
 
 class RabbitMqConfigurations extends AbstractServiceConfigurations {
     /** @var string  */
@@ -11,8 +12,8 @@ class RabbitMqConfigurations extends AbstractServiceConfigurations {
     /** @var string  */
     private string $host;
 
-    /** @var string  */
-    private string $port;
+    /** @var int  */
+    private int $port;
 
     /** @var string  */
     private string $user;
@@ -22,31 +23,30 @@ class RabbitMqConfigurations extends AbstractServiceConfigurations {
 
     /**
      * rabbitMqConfigurations constructor.
-     * @throws configurationException
+     * @throws Exception
      */
     public function __construct() {
-        if (!getenv('MINIMALISM_SERVICE_RABBITMQ_QUEUE_NAME')) {
-            throw new configurationException('rabbitMq', 'MINIMALISM_SERVICE_RABBITMQ_QUEUE_NAME is a required configuration');
-        }
-
         if (!($rabbitMqConnection = getenv('MINIMALISM_SERVICE_RABBITMQ'))) {
-            throw new configurationException('rabbitMq', 'MINIMALISM_SERVICE_RABBITMQ is a required configuration');
+            MinimalismErrorEvents::CONFIGURATION_ERROR('MINIMALISM_SERVICE_RABBITMQ')->throw();
         }
 
-        $this->queueName = getenv('MINIMALISM_SERVICE_RABBITMQ_QUEUE_NAME');
-
-        [
-            $this->host,
-            $this->port,
-            $this->user,
-            $this->password
-        ] = explode(',', $rabbitMqConnection);
+        try {
+            [
+                $this->host,
+                $this->port,
+                $this->user,
+                $this->password,
+                $this->queueName
+            ] = explode(',', $rabbitMqConnection);
+        } catch (Exception $e) {
+            MinimalismErrorEvents::CONFIGURATION_ERROR('MINIMALISM_SERVICE_RABBITMQ (incorrect)')->throw();
+        }
     }
 
     /**
-     * @return string
+     * @return int
      */
-    public function getPort(): string
+    public function getPort(): int
     {
         return $this->port;
     }
