@@ -101,6 +101,7 @@ class RabbitMq extends AbstractService {
      * @param array $message
      * @return bool
      * @throws JsonException
+     * @noinspection PhpDocRedundantThrowsInspection
      */
     public function dispatchMessage(array $message): bool {
         $this->getChannel()->queue_declare($this->configData->getQueueName(), false, true, false, false);
@@ -121,6 +122,7 @@ class RabbitMq extends AbstractService {
      * @param array $message
      * @return bool
      * @throws JsonException
+     * @noinspection PhpDocRedundantThrowsInspection
      */
     public function dispatchDelayedMessage(array $message, int $delay): bool {
         $this->getChannel()->queue_declare($this->configData->getQueueName(), false, true, false, false);
