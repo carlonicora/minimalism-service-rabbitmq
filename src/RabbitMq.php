@@ -1,31 +1,31 @@
 <?php
-namespace carlonicora\minimalism\services\rabbitMq;
+namespace CarloNicora\Minimalism\Services\RabbitMq;
 
-use carlonicora\minimalism\core\services\abstracts\abstractService;
-use carlonicora\minimalism\core\services\factories\servicesFactory;
-use carlonicora\minimalism\core\services\interfaces\serviceConfigurationsInterface;
+use CarloNicora\Minimalism\Core\Services\Abstracts\AbstractService;
+use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
+use CarloNicora\Minimalism\Core\Services\Interfaces\ServiceConfigurationsInterface;
 use ErrorException;
 use Exception;
-use carlonicora\minimalism\services\rabbitMq\configurations\rabbitMqConfigurations;
+use CarloNicora\Minimalism\Services\RabbitMq\Configurations\RabbitMqConfigurations;
 use JsonException;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
 
-class rabbitMq extends abstractService {
-    /** @var rabbitMqConfigurations  */
-    public rabbitMqConfigurations $configData;
+class RabbitMq extends AbstractService {
+    /** @var RabbitMqConfigurations  */
+    public RabbitMqConfigurations $configData;
 
     /** @var AMQPStreamConnection*/
     private ?AMQPStreamConnection $connection=null;
 
     /**
      * abstractApiCaller constructor.
-     * @param serviceConfigurationsInterface $configData
-     * @param servicesFactory $services
+     * @param ServiceConfigurationsInterface $configData
+     * @param ServicesFactory $services
      */
-    public function __construct(serviceConfigurationsInterface $configData, servicesFactory $services) {
+    public function __construct(ServiceConfigurationsInterface $configData, ServicesFactory $services) {
         parent::__construct($configData, $services);
 
         /** @noinspection PhpFieldAssignmentTypeMismatchInspection */
@@ -49,13 +49,13 @@ class rabbitMq extends abstractService {
     /**
      * @return AMQPChannel
      */
-    private function channel() : AMQPChannel {
+    private function getChannel() : AMQPChannel {
         if ($this->connection === null){
             $this->connection = new AMQPStreamConnection(
-                $this->configData->rabbitMqConnection['host'],
-                $this->configData->rabbitMqConnection['port'],
-                $this->configData->rabbitMqConnection['user'],
-                $this->configData->rabbitMqConnection['password']);
+                $this->configData->getHost(),
+                $this->configData->getPort(),
+                $this->configData->getUser(),
+                $this->configData->getPassword());
         }
         return $this->connection->channel();
     }
@@ -65,17 +65,16 @@ class rabbitMq extends abstractService {
      * @param callable $callback
      * @throws ErrorException
      */
-    public function listen(&$callback): void {
-        $channel = $this->channel();
-        $channel->queue_declare($this->configData->queueName, false, true, false, false);
+    public function listen($callback): void {
+        $this->getChannel()->queue_declare($this->configData->getQueueName(), false, true, false, false);
 
-        $channel->basic_qos(null, 1, null);
-        $channel->basic_consume($this->configData->queueName , '', false, false, false, false, $callback);
+        $this->getChannel()->basic_qos(null, 1, null);
+        $this->getChannel()->basic_consume($this->configData->getQueueName() , '', false, false, false, false, $callback);
 
-        while(count($channel->callbacks)) {
-            $channel->wait();
+        while(count($this->getChannel()->callbacks)) {
+            $this->getChannel()->wait();
         }
-        $channel->close();
+        $this->getChannel()->close();
         $this->connection->close();
     }
 
@@ -84,10 +83,9 @@ class rabbitMq extends abstractService {
      */
     public function isQueueEmpty(): bool {
         $messageCount = 0;
-        $channel = $this->channel();
         try {
             /** @noinspection PhpUnusedLocalVariableInspection */
-            [$queue, $messageCount, $consumerCount] = $channel->queue_declare($this->configData->queueName, true);
+            [$queue, $messageCount, $consumerCount] = $this->getChannel()->queue_declare($this->configData->getQueueName(), true);
         } catch (Exception $e) {
             /** @noinspection PhpPossiblePolymorphicInvocationInspection */
             if ($e->amqp_reply_code === 404){
@@ -106,8 +104,7 @@ class rabbitMq extends abstractService {
      * @noinspection PhpDocRedundantThrowsInspection
      */
     public function dispatchMessage(array $message): bool {
-        $channel = $this->channel();
-        $channel->queue_declare($this->configData->queueName, false, true, false, false);
+        $this->getChannel()->queue_declare($this->configData->getQueueName(), false, true, false, false);
 
         $jsonMessage = json_encode($message, JSON_THROW_ON_ERROR, 512);
         $msg = new AMQPMessage(
@@ -115,7 +112,7 @@ class rabbitMq extends abstractService {
             ['delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT]
         );
 
-        $channel->basic_publish($msg, '', $this->configData->queueName);
+        $this->getChannel()->basic_publish($msg, '', $this->configData->getQueueName());
 
         return true;
     }
@@ -128,8 +125,7 @@ class rabbitMq extends abstractService {
      * @noinspection PhpDocRedundantThrowsInspection
      */
     public function dispatchDelayedMessage(array $message, int $delay): bool {
-        $channel = $this->channel();
-        $channel->queue_declare($this->configData->queueName, false, true, false, false);
+        $this->getChannel()->queue_declare($this->configData->getQueueName(), false, true, false, false);
 
         $jsonMessage = json_encode($message, JSON_THROW_ON_ERROR, 512);
         $msg = new AMQPMessage(
@@ -142,7 +138,7 @@ class rabbitMq extends abstractService {
             ]
         );
 
-        $channel->basic_publish($msg, '', $this->configData->queueName);
+        $this->getChannel()->basic_publish($msg, '', $this->configData->getQueueName());
 
         return true;
     }
