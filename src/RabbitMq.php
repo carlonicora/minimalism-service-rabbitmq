@@ -67,16 +67,16 @@ class RabbitMq extends AbstractService {
      * @throws ErrorException
      */
     public function listen($callback, string $queueName): void {
-        $this->getChannel()->queue_declare($queueName, false, true, false, false);
+        $channel = $this->getChannel();
+        $channel->queue_declare($queueName, false, true, false, false);
 
-        $this->getChannel()->basic_qos(null, 1, null);
-        $this->getChannel()->basic_consume($queueName , '', false, false, false, false, $callback);
+        $channel->basic_qos(null, 1, null);
+        $channel->basic_consume($queueName , '', false, false, false, false, $callback);
 
-        while(count($this->getChannel()->callbacks)) {
-            $this->getChannel()->wait();
+        while(count($channel->callbacks)) {
+            $channel->wait();
         }
-        $this->getChannel()->close();
-        $this->connection->close();
+        $channel->close();
     }
 
     /**
@@ -86,8 +86,9 @@ class RabbitMq extends AbstractService {
     public function isQueueEmpty(string $queueName): bool {
         $messageCount = 0;
         try {
+            $channel = $this->getChannel();
             /** @noinspection PhpUnusedLocalVariableInspection */
-            [$queue, $messageCount, $consumerCount] = $this->getChannel()->queue_declare($queueName, true);
+            [$queue, $messageCount, $consumerCount] = $channel->queue_declare($queueName, true);
         } catch (Exception $e) {
             /** @noinspection PhpPossiblePolymorphicInvocationInspection */
             if ($e->amqp_reply_code === 404){
@@ -106,7 +107,8 @@ class RabbitMq extends AbstractService {
      * @throws JsonException
      */
     public function dispatchMessage(array $message, string $queueName): bool {
-        $this->getChannel()->queue_declare($queueName, false, true, false, false);
+        $channel = $this->getChannel();
+        $channel->queue_declare($queueName, false, true, false, false);
 
         $jsonMessage = json_encode($message, JSON_THROW_ON_ERROR, 512);
         $msg = new AMQPMessage(
@@ -114,7 +116,8 @@ class RabbitMq extends AbstractService {
             ['delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT]
         );
 
-        $this->getChannel()->basic_publish($msg, '', $queueName);
+        $channel->basic_publish($msg, '', $queueName);
+        $channel->close();
 
         return true;
     }
@@ -127,7 +130,8 @@ class RabbitMq extends AbstractService {
      * @throws JsonException
      */
     public function dispatchDelayedMessage(array $message, string $queueName, int $delay): bool {
-        $this->getChannel()->queue_declare($queueName, false, true, false, false);
+        $channel = $this->getChannel();
+        $channel->queue_declare($queueName, false, true, false, false);
 
         $jsonMessage = json_encode($message, JSON_THROW_ON_ERROR, 512);
         $msg = new AMQPMessage(
@@ -140,7 +144,8 @@ class RabbitMq extends AbstractService {
             ]
         );
 
-        $this->getChannel()->basic_publish($msg, '', $queueName);
+        $channel->basic_publish($msg, '', $queueName);
+        $channel->close();
 
         return true;
     }
