@@ -8,6 +8,8 @@ RUN chmod -R 777 /tmp/scripts/
 
 COPY ./php-cli/configurations/* /usr/local/etc/php/conf.d/
 
+RUN docker-php-ext-install sockets bcmath
+
 RUN docker-php-source extract \
     && pecl install xdebug \
     && docker-php-ext-enable xdebug \
