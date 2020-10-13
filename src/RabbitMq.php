@@ -55,7 +55,19 @@ class RabbitMq extends AbstractService {
                 $this->configData->getHost(),
                 $this->configData->getPort(),
                 $this->configData->getUser(),
-                $this->configData->getPassword());
+                $this->configData->getPassword(),
+                '/',
+                false,
+                'AMQPLAIN',
+                null,
+                'en_US',
+                3.0,
+                3.0,
+                null,
+                true,
+                15,
+                0.0,
+                null);
         }
         return $this->connection->channel();
     }
@@ -74,7 +86,14 @@ class RabbitMq extends AbstractService {
         $channel->basic_consume($queueName , '', false, false, false, false, $callback);
 
         while(count($channel->callbacks)) {
-            $channel->wait();
+            try {
+                $channel->wait();
+            } catch (ErrorException $e) {
+                $channel->close();
+                $this->connection->close();
+                $this->connection = null;
+                $this->listen($callback, $queueName);
+            }
         }
         $channel->close();
     }
