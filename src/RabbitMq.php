@@ -17,7 +17,7 @@ class RabbitMq extends AbstractService {
     /** @var RabbitMqConfigurations  */
     public RabbitMqConfigurations $configData;
 
-    /** @var AMQPStreamConnection*/
+    /** @var AMQPStreamConnection|null */
     private ?AMQPStreamConnection $connection=null;
 
     /**
@@ -55,7 +55,19 @@ class RabbitMq extends AbstractService {
                 $this->configData->getHost(),
                 $this->configData->getPort(),
                 $this->configData->getUser(),
-                $this->configData->getPassword());
+                $this->configData->getPassword(),
+                '/',
+                false,
+                'AMQPLAIN',
+                null,
+                'en_US',
+                3.0,
+                3.0,
+                null,
+                true,
+                15,
+                0.0,
+                null);
         }
         return $this->connection->channel();
     }
@@ -63,29 +75,59 @@ class RabbitMq extends AbstractService {
 
     /**
      * @param callable $callback
+     * @param string $queueName
      * @throws ErrorException
      */
-    public function listen($callback): void {
-        $this->getChannel()->queue_declare($this->configData->getQueueName(), false, true, false, false);
+    public function listen($callback, string $queueName): void {
+        $channel = $this->getChannel();
+        $channel->queue_declare($queueName, false, true, false, false);
 
-        $this->getChannel()->basic_qos(null, 1, null);
-        $this->getChannel()->basic_consume($this->configData->getQueueName() , '', false, false, false, false, $callback);
+        $channel->basic_qos(null, 1, null);
+        $channel->basic_consume($queueName , '', false, false, false, false, $callback);
 
-        while(count($this->getChannel()->callbacks)) {
-            $this->getChannel()->wait();
+        while(count($channel->callbacks)) {
+            try {
+                $channel->wait();
+            } catch (ErrorException $e) {
+                $channel->close();
+                $this->connection->close();
+                $this->connection = null;
+                $this->listen($callback, $queueName);
+            }
         }
-        $this->getChannel()->close();
-        $this->connection->close();
+        $channel->close();
     }
 
     /**
-     * @return bool
+     * @param string $queueName
+     * @return int
      */
-    public function isQueueEmpty(): bool {
+    public function countMessagesInQueue(string $queueName): int
+    {
         $messageCount = 0;
         try {
+            $channel = $this->getChannel();
+            [,$messageCount,] = $channel->queue_declare($queueName, true);
+        } catch (Exception $e) {
+            /** @noinspection PhpPossiblePolymorphicInvocationInspection */
+            if ($e->amqp_reply_code === 404){
+                $messageCount = 0;
+            }
+        }
+
+        return $messageCount;
+    }
+
+    /**
+     * @param string $queueName
+     * @return bool
+     */
+    public function isQueueEmpty(string $queueName): bool {
+        $messageCount = 0;
+        try {
+            $channel = $this->getChannel();
             /** @noinspection PhpUnusedLocalVariableInspection */
-            [$queue, $messageCount, $consumerCount] = $this->getChannel()->queue_declare($this->configData->getQueueName(), true);
+            [$queue, $messageCount, $consumerCount] = $channel->queue_declare($queueName, true);
         } catch (Exception $e) {
             /** @noinspection PhpPossiblePolymorphicInvocationInspection */
             if ($e->amqp_reply_code === 404){
@@ -99,12 +141,14 @@ class RabbitMq extends AbstractService {
 
     /**
      * @param array $message
+     * @param string $queueName
      * @return bool
      * @throws JsonException
      * @noinspection PhpDocRedundantThrowsInspection
      */
-    public function dispatchMessage(array $message): bool {
-        $this->getChannel()->queue_declare($this->configData->getQueueName(), false, true, false, false);
+    public function dispatchMessage(array $message, string $queueName): bool {
+        $channel = $this->getChannel();
+        $channel->queue_declare($queueName, false, true, false, false);
 
         $jsonMessage = json_encode($message, JSON_THROW_ON_ERROR, 512);
         $msg = new AMQPMessage(
@@ -112,20 +156,23 @@ class RabbitMq extends AbstractService {
             ['delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT]
         );
 
-        $this->getChannel()->basic_publish($msg, '', $this->configData->getQueueName());
+        $channel->basic_publish($msg, '', $queueName);
+        $channel->close();
 
         return true;
     }
 
     /**
-     * @param int $delay delay in seconds
      * @param array $message
+     * @param string $queueName
+     * @param int $delay delay in seconds
      * @return bool
      * @throws JsonException
      * @noinspection PhpDocRedundantThrowsInspection
      */
-    public function dispatchDelayedMessage(array $message, int $delay): bool {
-        $this->getChannel()->queue_declare($this->configData->getQueueName(), false, true, false, false);
+    public function dispatchDelayedMessage(array $message, string $queueName, int $delay): bool {
+        $channel = $this->getChannel();
+        $channel->queue_declare($queueName, false, true, false, false);
 
         $jsonMessage = json_encode($message, JSON_THROW_ON_ERROR, 512);
         $msg = new AMQPMessage(
@@ -138,7 +185,8 @@ class RabbitMq extends AbstractService {
             ]
         );
 
-        $this->getChannel()->basic_publish($msg, '', $this->configData->getQueueName());
+        $channel->basic_publish($msg, '', $queueName);
+        $channel->close();
 
         return true;
     }

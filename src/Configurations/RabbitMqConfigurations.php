@@ -7,9 +7,6 @@ use Exception;
 
 class RabbitMqConfigurations extends AbstractServiceConfigurations {
     /** @var string  */
-    private string $queueName;
-
-    /** @var string  */
     private string $host;
 
     /** @var int  */
@@ -35,8 +32,7 @@ class RabbitMqConfigurations extends AbstractServiceConfigurations {
                 $this->host,
                 $this->port,
                 $this->user,
-                $this->password,
-                $this->queueName
+                $this->password
             ] = explode(',', $rabbitMqConnection);
         } catch (Exception $e) {
             MinimalismErrorEvents::CONFIGURATION_ERROR('MINIMALISM_SERVICE_RABBITMQ (incorrect)')->throw();
@@ -65,14 +61,6 @@ class RabbitMqConfigurations extends AbstractServiceConfigurations {
     public function getHost(): string
     {
         return $this->host;
-    }
-
-    /**
-     * @return string
-     */
-    public function getQueueName(): string
-    {
-        return $this->queueName;
     }
 
     /**
