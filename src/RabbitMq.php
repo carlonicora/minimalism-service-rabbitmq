@@ -100,6 +100,26 @@ class RabbitMq extends AbstractService {
 
     /**
      * @param string $queueName
+     * @return int
+     */
+    public function countMessagesInQueue(string $queueName): int
+    {
+        $messageCount = 0;
+        try {
+            $channel = $this->getChannel();
+            [,$messageCount,] = $channel->queue_declare($queueName, true);
+        } catch (Exception $e) {
+            /** @noinspection PhpPossiblePolymorphicInvocationInspection */
+            if ($e->amqp_reply_code === 404){
+                $messageCount = 0;
+            }
+        }
+
+        return $messageCount;
+    }
+
+    /**
+     * @param string $queueName
      * @return bool
      */
     public function isQueueEmpty(string $queueName): bool {
