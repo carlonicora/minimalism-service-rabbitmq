@@ -51,34 +51,49 @@ class RabbitMq extends AbstractService {
      */
     private function getChannel() : AMQPChannel {
         if ($this->connection === null){
-            $this->connection = new AMQPStreamConnection(
-                $this->configData->getHost(),
-                $this->configData->getPort(),
-                $this->configData->getUser(),
-                $this->configData->getPassword(),
-                '/',
-                false,
-                'AMQPLAIN',
-                null,
-                'en_US',
-                3.0,
-                3.0,
-                null,
-                true,
-                15,
-                0.0,
-                null);
+            $this->connect();
+        } else {
+            try {
+                $this->connection->checkHeartBeat();
+            } catch (Exception $e) {
+                $this->connect();
+            }
         }
+
         return $this->connection->channel();
+    }
+
+    /**
+     *
+     */
+    public function connect(): void
+    {
+        $this->connection = new AMQPStreamConnection(
+            $this->configData->getHost(),
+            $this->configData->getPort(),
+            $this->configData->getUser(),
+            $this->configData->getPassword(),
+            '/',
+            false,
+            'AMQPLAIN',
+            null,
+            'en_US',
+            3.0,
+            3.0,
+            null,
+            true,
+            15,
+            0.0,
+            null);
     }
 
 
     /**
      * @param callable $callback
      * @param string $queueName
-     * @throws ErrorException
+     * @throws Exception
      */
-    public function listen($callback, string $queueName): void {
+    public function listen(callable $callback, string $queueName): void {
         $channel = $this->getChannel();
         $channel->queue_declare($queueName, false, true, false, false);
 
