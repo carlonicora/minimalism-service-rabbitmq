@@ -48,6 +48,7 @@ class RabbitMq extends AbstractService {
 
     /**
      * @return AMQPChannel
+     * @throws Exception
      */
     private function getChannel() : AMQPChannel {
         if ($this->connection === null){
@@ -64,27 +65,19 @@ class RabbitMq extends AbstractService {
     }
 
     /**
-     *
+     * @throws Exception
      */
     public function connect(): void
     {
-        $this->connection = new AMQPStreamConnection(
-            $this->configData->getHost(),
-            $this->configData->getPort(),
-            $this->configData->getUser(),
-            $this->configData->getPassword(),
-            '/',
-            false,
-            'AMQPLAIN',
-            null,
-            'en_US',
-            3.0,
-            3.0,
-            null,
-            true,
-            100,
-            0.0,
-            null);
+        $this->connection = AMQPStreamConnection::create_connection([
+            'host' => $this->configData->getHost(),
+            'port' => $this->configData->getPort(),
+            'user' => $this->configData->getUser(),
+            'password' => $this->configData->getPassword()
+        ],
+        [
+            'heartbeat' => 60
+        ]);
     }
 
 
@@ -159,13 +152,14 @@ class RabbitMq extends AbstractService {
      * @param string $queueName
      * @return bool
      * @throws JsonException
+     * @throws Exception
      * @noinspection PhpDocRedundantThrowsInspection
      */
     public function dispatchMessage(array $message, string $queueName): bool {
         $channel = $this->getChannel();
         $channel->queue_declare($queueName, false, true, false, false);
 
-        $jsonMessage = json_encode($message, JSON_THROW_ON_ERROR, 512);
+        $jsonMessage = json_encode($message, JSON_THROW_ON_ERROR);
         $msg = new AMQPMessage(
             $jsonMessage,
             ['delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT]
@@ -183,13 +177,14 @@ class RabbitMq extends AbstractService {
      * @param int $delay delay in seconds
      * @return bool
      * @throws JsonException
+     * @throws Exception
      * @noinspection PhpDocRedundantThrowsInspection
      */
     public function dispatchDelayedMessage(array $message, string $queueName, int $delay): bool {
         $channel = $this->getChannel();
         $channel->queue_declare($queueName, false, true, false, false);
 
-        $jsonMessage = json_encode($message, JSON_THROW_ON_ERROR, 512);
+        $jsonMessage = json_encode($message, JSON_THROW_ON_ERROR);
         $msg = new AMQPMessage(
             $jsonMessage,
             [

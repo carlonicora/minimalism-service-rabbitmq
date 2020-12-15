@@ -25,7 +25,8 @@ class ServiceFactory extends AbstractServiceFactory {
      * @param servicesFactory $services
      * @return mixed|void
      */
-    public function create(servicesFactory $services) {
+    public function create(servicesFactory $services): RabbitMq
+    {
         return new RabbitMq($this->configData, $services);
     }
 }
