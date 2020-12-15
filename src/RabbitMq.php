@@ -82,7 +82,7 @@ class RabbitMq extends AbstractService {
             3.0,
             null,
             true,
-            15,
+            100,
             0.0,
             null);
     }
