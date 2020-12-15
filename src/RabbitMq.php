@@ -70,16 +70,17 @@ class RabbitMq extends AbstractService {
     public function connect(): void
     {
         $this->connection = AMQPStreamConnection::create_connection([
-            'host' => $this->configData->getHost(),
-            'port' => $this->configData->getPort(),
-            'user' => $this->configData->getUser(),
-            'password' => $this->configData->getPassword()
-        ],
-        [
-            'heartbeat' => 60
+            [
+                'host' => $this->configData->getHost(),
+                'port' => $this->configData->getPort(),
+                'user' => $this->configData->getUser(),
+                'password' => $this->configData->getPassword()
+            ],
+            [
+                'heartbeat' => 60
+            ]
         ]);
     }
-
 
     /**
      * @param callable $callback
@@ -177,7 +178,6 @@ class RabbitMq extends AbstractService {
      * @param int $delay delay in seconds
      * @return bool
      * @throws JsonException
-     * @throws Exception
      * @noinspection PhpDocRedundantThrowsInspection
      */
     public function dispatchDelayedMessage(array $message, string $queueName, int $delay): bool {
