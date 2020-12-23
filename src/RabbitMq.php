@@ -4,7 +4,6 @@ namespace CarloNicora\Minimalism\Services\RabbitMq;
 use CarloNicora\Minimalism\Core\Services\Abstracts\AbstractService;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Core\Services\Interfaces\ServiceConfigurationsInterface;
-use ErrorException;
 use Exception;
 use CarloNicora\Minimalism\Services\RabbitMq\Configurations\RabbitMqConfigurations;
 use JsonException;
@@ -77,7 +76,7 @@ class RabbitMq extends AbstractService {
                 'password' => $this->configData->getPassword()
             ],
             [
-                'heartbeat' => 60
+                'heartbeat' => 2000
             ]
         ]);
     }
@@ -87,17 +86,18 @@ class RabbitMq extends AbstractService {
      * @param string $queueName
      * @throws Exception
      */
-    public function listen(callable $callback, string $queueName): void {
+    public function listen(callable $callback, string $queueName): void
+    {
         $channel = $this->getChannel();
         $channel->queue_declare($queueName, false, true, false, false);
 
         $channel->basic_qos(null, 1, null);
-        $channel->basic_consume($queueName , '', false, false, false, false, $callback);
+        $channel->basic_consume($queueName, '', false, false, false, false, $callback);
 
-        while(count($channel->callbacks)) {
+        while (count($channel->callbacks)) {
             try {
                 $channel->wait();
-            } catch (ErrorException $e) {
+            } catch (Exception $e){
                 $channel->close();
                 $this->connection->close();
                 $this->connection = null;
@@ -178,6 +178,7 @@ class RabbitMq extends AbstractService {
      * @param int $delay delay in seconds
      * @return bool
      * @throws JsonException
+     * @throws Exception
      * @noinspection PhpDocRedundantThrowsInspection
      */
     public function dispatchDelayedMessage(array $message, string $queueName, int $delay): bool {
