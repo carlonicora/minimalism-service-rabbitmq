@@ -1,7 +1,7 @@
 {
   "name": "carlonicora/minimalism-service-rabbitmq",
   "description": "RabbitMQ service for minimalism",
-  "version": "3.1.4",
+  "version": "4.0.0",
   "homepage": "https://carlonicora.com",
   "time": "2019-05-14",
   "license": "MIT",
@@ -20,19 +20,11 @@
       "CarloNicora\\Minimalism\\Services\\RabbitMq\\":"src/"
     }
   },
-  "autoload-dev": {
-    "psr-4": {
-      "CarloNicora\\Minimalism\\Services\\RabbitMq\\Tests\\":"tests/"
-    }
-  },
   "require": {
-    "php": "^7.4",
+    "php": ">=8.0",
     "ext-json": "*",
     "ext-sockets": "*",
-    "carlonicora/minimalism": "~11.0",
+    "carlonicora/minimalism": "~12.0",
     "php-amqplib/php-amqplib": "~2.12"
-  },
-  "require-dev": {
-    "phpunit/phpunit": "^9"
   }
 }

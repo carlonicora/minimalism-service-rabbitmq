@@ -1,34 +1,43 @@
 <?php
 namespace CarloNicora\Minimalism\Services\RabbitMq;
 
-use CarloNicora\Minimalism\Core\Services\Abstracts\AbstractService;
-use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
-use CarloNicora\Minimalism\Core\Services\Interfaces\ServiceConfigurationsInterface;
+use CarloNicora\Minimalism\Interfaces\ServiceInterface;
 use Exception;
-use CarloNicora\Minimalism\Services\RabbitMq\Configurations\RabbitMqConfigurations;
 use JsonException;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
 
-class RabbitMq extends AbstractService {
-    /** @var RabbitMqConfigurations  */
-    public RabbitMqConfigurations $configData;
+class RabbitMq implements ServiceInterface
+{
+    /** @var string  */
+    private string $host;
+
+    /** @var int  */
+    private int $port;
+
+    /** @var string  */
+    private string $user;
+
+    /** @var string  */
+    private string $password;
 
     /** @var AMQPStreamConnection|null */
     private ?AMQPStreamConnection $connection=null;
 
     /**
-     * abstractApiCaller constructor.
-     * @param ServiceConfigurationsInterface $configData
-     * @param ServicesFactory $services
+     * RabbitMq constructor.
+     * @param string $MINIMALISM_SERVICE_RABBITMQ
      */
-    public function __construct(ServiceConfigurationsInterface $configData, ServicesFactory $services) {
-        parent::__construct($configData, $services);
-
-        /** @noinspection PhpFieldAssignmentTypeMismatchInspection */
-        $this->configData = $configData;
+    public function __construct(string $MINIMALISM_SERVICE_RABBITMQ)
+    {
+        [
+            $this->host,
+            $this->port,
+            $this->user,
+            $this->password
+        ] = explode(',', $MINIMALISM_SERVICE_RABBITMQ);
     }
 
     /**
@@ -39,8 +48,7 @@ class RabbitMq extends AbstractService {
             $this->connection->channel()->close();
             try {
                 $this->connection->close();
-            } catch (Exception $e) {
-
+            } catch (Exception) {
             }
         }
     }
@@ -55,7 +63,7 @@ class RabbitMq extends AbstractService {
         } else {
             try {
                 $this->connection->checkHeartBeat();
-            } catch (Exception $e) {
+            } catch (Exception) {
                 $this->connect();
             }
         }
@@ -70,10 +78,10 @@ class RabbitMq extends AbstractService {
     {
         $this->connection = AMQPStreamConnection::create_connection([
             [
-                'host' => $this->configData->getHost(),
-                'port' => $this->configData->getPort(),
-                'user' => $this->configData->getUser(),
-                'password' => $this->configData->getPassword()
+                'host' => $this->host,
+                'port' => $this->port,
+                'user' => $this->user,
+                'password' => $this->password
             ],
             [
                 'heartbeat' => 2000
@@ -97,7 +105,7 @@ class RabbitMq extends AbstractService {
         while (count($channel->callbacks)) {
             try {
                 $channel->wait();
-            } catch (Exception $e){
+            } catch (Exception){
                 $channel->close();
                 $this->connection->close();
                 $this->connection = null;
@@ -205,7 +213,13 @@ class RabbitMq extends AbstractService {
     /**
      *
      */
-    public function cleanNonPersistentVariables(): void {
+    public function initialise(): void {}
+
+    /**
+     *
+     */
+    public function destroy(): void
+    {
         $this->connection = null;
     }
 }
