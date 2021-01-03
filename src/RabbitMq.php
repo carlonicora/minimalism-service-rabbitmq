@@ -76,17 +76,7 @@ class RabbitMq implements ServiceInterface
      */
     public function connect(): void
     {
-        $this->connection = AMQPStreamConnection::create_connection([
-            [
-                'host' => $this->host,
-                'port' => $this->port,
-                'user' => $this->user,
-                'password' => $this->password
-            ],
-            [
-                'heartbeat' => 2000
-            ]
-        ]);
+        $this->connection = new AMQPStreamConnection($this->host, $this->port, $this->user,$this->password);
     }
 
     /**
