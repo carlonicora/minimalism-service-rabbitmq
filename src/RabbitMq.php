@@ -87,9 +87,11 @@ class RabbitMq implements ServiceInterface
     public function listen(callable $callback, string $queueName): void
     {
         $channel = $this->getChannel();
+        /** @noinspection UnusedFunctionResultInspection */
         $channel->queue_declare($queueName, false, true, false, false);
 
         $channel->basic_qos(null, 1, null);
+        /** @noinspection UnusedFunctionResultInspection */
         $channel->basic_consume($queueName, '', false, false, false, false, $callback);
 
         while (count($channel->callbacks)) {
@@ -152,10 +154,10 @@ class RabbitMq implements ServiceInterface
      * @return bool
      * @throws JsonException
      * @throws Exception
-     * @noinspection PhpDocRedundantThrowsInspection
      */
     public function dispatchMessage(array $message, string $queueName): bool {
         $channel = $this->getChannel();
+        /** @noinspection UnusedFunctionResultInspection */
         $channel->queue_declare($queueName, false, true, false, false);
 
         $jsonMessage = json_encode($message, JSON_THROW_ON_ERROR);
@@ -177,10 +179,10 @@ class RabbitMq implements ServiceInterface
      * @return bool
      * @throws JsonException
      * @throws Exception
-     * @noinspection PhpDocRedundantThrowsInspection
      */
     public function dispatchDelayedMessage(array $message, string $queueName, int $delay): bool {
         $channel = $this->getChannel();
+        /** @noinspection UnusedFunctionResultInspection */
         $channel->queue_declare($queueName, false, true, false, false);
 
         $jsonMessage = json_encode($message, JSON_THROW_ON_ERROR);
