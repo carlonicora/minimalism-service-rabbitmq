@@ -109,6 +109,17 @@ class RabbitMq implements ServiceInterface
 
     /**
      * @param string $queueName
+     * @throws Exception
+     */
+    public function purge(string $queueName): void
+    {
+        $channel = $this->getChannel();
+        $channel->queue_purge($queueName);
+        $channel->close();
+    }
+
+    /**
+     * @param string $queueName
      * @return int
      */
     public function countMessagesInQueue(string $queueName): int
