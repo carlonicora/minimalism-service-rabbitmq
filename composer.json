@@ -1,7 +1,7 @@
 {
   "name": "carlonicora/minimalism-service-rabbitmq",
   "description": "RabbitMQ service for minimalism",
-  "version": "4.1.1-beta1",
+  "version": "4.1.1-beta2",
   "homepage": "https://carlonicora.com",
   "time": "2019-05-14",
   "license": "MIT",
@@ -17,7 +17,7 @@
   ],
   "autoload": {
     "psr-4": {
-      "CarloNicora\\Minimalism\\Serqvices\\RabbitMq\\":"src/"
+      "CarloNicora\\Minimalism\\Services\\RabbitMq\\":"src/"
     }
   },
   "require": {
