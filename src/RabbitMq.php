@@ -1,7 +1,7 @@
 <?php
 namespace CarloNicora\Minimalism\Services\RabbitMq;
 
-use CarloNicora\Minimalism\Interfaces\ServiceInterface;
+use CarloNicora\Minimalism\Abstracts\AbstractService;
 use Exception;
 use JsonException;
 use PhpAmqpLib\Channel\AMQPChannel;
@@ -9,7 +9,7 @@ use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
 
-class RabbitMq implements ServiceInterface
+class RabbitMq extends AbstractService
 {
     /** @var string  */
     private string $host;
@@ -30,8 +30,12 @@ class RabbitMq implements ServiceInterface
      * RabbitMq constructor.
      * @param string $MINIMALISM_SERVICE_RABBITMQ
      */
-    public function __construct(string $MINIMALISM_SERVICE_RABBITMQ)
+    public function __construct(
+        string $MINIMALISM_SERVICE_RABBITMQ,
+    )
     {
+        parent::__construct();
+
         [
             $this->host,
             $this->port,
@@ -212,11 +216,6 @@ class RabbitMq implements ServiceInterface
 
         return true;
     }
-
-    /**
-     *
-     */
-    public function initialise(): void {}
 
     /**
      *
