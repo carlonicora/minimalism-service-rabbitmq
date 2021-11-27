@@ -20,8 +20,8 @@ class RabbitMq extends AbstractService
     /** @var string  */
     private string $user;
 
-    /** @var string  */
-    private string $password;
+    /** @var string|null  */
+    private ?string $password;
 
     /** @var AMQPStreamConnection|null */
     private ?AMQPStreamConnection $connection=null;
