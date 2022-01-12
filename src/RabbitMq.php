@@ -34,8 +34,6 @@ class RabbitMq extends AbstractService
         string $MINIMALISM_SERVICE_RABBITMQ,
     )
     {
-        parent::__construct();
-
         [
             $this->host,
             $this->port,
@@ -222,6 +220,7 @@ class RabbitMq extends AbstractService
      */
     public function destroy(): void
     {
+        parent::destroy();
         $this->connection = null;
     }
 }
