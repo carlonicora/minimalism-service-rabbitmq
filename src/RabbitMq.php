@@ -43,19 +43,6 @@ class RabbitMq extends AbstractService
     }
 
     /**
-     * @throws Exception
-     */
-    public function __destruct() {
-        if ($this->connection !== null) {
-            $this->connection->channel()->close();
-            try {
-                $this->connection->close();
-            } catch (Exception) {
-            }
-        }
-    }
-
-    /**
      * @return AMQPChannel
      * @throws Exception
      */
@@ -220,7 +207,15 @@ class RabbitMq extends AbstractService
      */
     public function destroy(): void
     {
-        parent::destroy();
-        $this->connection = null;
+
+        if ($this->connection !== null) {
+            $this->connection->channel()->close();
+            try {
+                $this->connection->close();
+            } catch (Exception) {
+            }
+
+            $this->connection = null;
+        }
     }
 }
